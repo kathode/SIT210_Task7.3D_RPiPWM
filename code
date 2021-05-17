@@ -1,0 +1,75 @@
+import RPi.GPIO as GPIO
+import time
+from time import sleep
+import _thread
+
+GPIO.setwarnings(False)
+GPIO.cleanup()
+GPIO.setmode(GPIO.BCM)
+
+TRIG = 4
+ECHO = 18
+
+
+
+LED = 12
+
+GPIO.setup(TRIG, GPIO.OUT)
+GPIO.setup(ECHO, GPIO.IN)
+
+
+
+GPIO.setup(LED, GPIO.OUT)
+pi_pwm = GPIO.PWM(LED, 1000)
+pi_pwm.start(0)
+
+
+
+def in_blindspot(distance): #yellow
+    if distance < 101:
+        ratio = 100 - int(distance)
+        pi_pwm.ChangeDutyCycle(ratio) #provide duty cycle in the range 0-100
+    
+    else:
+        pi_pwm.ChangeDutyCycle(0)
+        
+
+def check():
+    GPIO.output(TRIG, True)
+    time.sleep (0.0001)
+    GPIO.output(TRIG, False)
+
+    while GPIO.input(ECHO) == False:
+            start = time.time()
+
+    while GPIO.input(ECHO) == True:
+            end = time.time()
+
+    sig_time = end-start
+
+    #cm: 
+    distance = sig_time / 0.000058
+
+    print('Distance: {} cm'.format(distance))
+    return distance
+
+
+def blis():
+    while True:
+        distance = check()
+        sleep(0.1)
+        in_blindspot(distance)
+
+
+try:
+   _thread.start_new_thread( blis, ())
+   
+except:
+   print ("Error: unable to start thread")
+
+
+
+       
+
+
+
